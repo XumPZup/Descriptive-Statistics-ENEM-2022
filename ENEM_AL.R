@@ -43,7 +43,7 @@ display_single_box(enem$NU_NOTA_LC, "Linguagens e Codigos", "navajowhite2")
 
 display_single_box(enem$NU_NOTA_MT, "Matematica", "lightsalmon")
 
-display_single_box(enem$NU_NOTA_REDACAO, "Ciencias Humanas", "coral")
+display_single_box(enem$NU_NOTA_REDACAO, "Redaçao", "coral")
 
 display_single_box(enem$NU_NOTA_ENEM, "Nota ENEM", "indianred2")
 
@@ -78,4 +78,23 @@ redacTable
 barplot(mathFreq_rel, space=F, main="Frequencias das notas de matematica", ylim=c(0, 50), xlab="Range notas", ylab="Frequencia (%)", col="lightsalmon")
 barplot(redacFreq_rel, space=F, main="Frequencias das notas de redaçao", ylim=c(0, 30), xlab="Range notas", ylab="Frequencia (%)", col="coral")
 
+##########################################################################
+# ---------------------------------------------------------------------- #
+##########################################################################
 
+# Limites para as classes das frequencias
+limites <- c(0, 300, 400, 500, 600, 700, 1000)
+intervalos <- c("0 |-- 300", "300 |-- 400", "400 |-- 500", "500 |-- 600",
+                "600 |-- 700","700 |-- 1000")
+
+# Caluclando frequencias absolutas, relativas, e acumuladas
+enemFreq <- table(cut(enem$NU_NOTA_ENEM, breaks=limites, right=F, labels=intervalos))
+enemFreq_rel <- round(enemFreq / length(enem$NU_NOTA_ENEM) * 100, 2)
+enemFreq_cum <- cumsum(enemFreq)
+enemFreq_rel_cum <- cumsum(enemFreq_rel)
+
+enemTable <- cbind(enemFreq, enemFreq_rel, enemFreq_cum, enemFreq_rel_cum)
+
+enemTable
+
+barplot(enemFreq_rel, space=F, main="Frequencias das notas do ENEM", ylim=c(0, 50), xlab="Range notas", ylab="Frequencia (%)", col="indianred2")

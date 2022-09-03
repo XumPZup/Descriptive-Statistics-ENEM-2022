@@ -57,26 +57,25 @@ intervalos <- c("0 |-- 100", "100 |-- 200", "200 |-- 300", "300 |-- 400",
                 "400 |-- 500", "500 |-- 600", "600 |-- 700", "700 |-- 800", 
                 "800 |-- 900", "900 |-- 1000")
 
-# Caluclando frequencias absolutas, relativas, e acumuladas
-mathFreq <- table(cut(enem$NU_NOTA_MT, breaks=limites, right=F, labels=intervalos))
-mathFreq_rel <- round(mathFreq / length(enem$NU_NOTA_MT) * 100, 2)
-mathFreq_cum <- cumsum(mathFreq)
-mathFreq_rel_cum <- cumsum(mathFreq_rel)
+# Calucla frequencias absolutas, relativas, e acumuladas, para uma coluna
+make_frequency_table <- function(column, limits, intervals, right){ 
+  freq <- table(cut(column, breaks=limits, right=right, labels=intervals))
+  freq_rel <- round(freq / length(column) * 100, 2)
+  freq_cum <- cumsum(freq)
+  freq_rel_cum <- cumsum(freq_rel)
+  
+  return(cbind(freq, freq_rel, freq_cum, freq_rel_cum))
+}
 
-mathTable <- cbind(mathFreq, mathFreq_rel, mathFreq_cum, mathFreq_rel_cum)
+mathTable <- make_frequency_table(enem$NU_NOTA_MT, limites, intervalos, F)
 
-redacFreq <- table(cut(enem$NU_NOTA_REDACAO, breaks=limites, right=F, labels=intervalos))
-redacFreq_rel <- round(redacFreq / length(enem$NU_NOTA_REDACAO) * 100, 2)
-redacFreq_cum <- cumsum(redacFreq)
-redacFreq_rel_cum <- cumsum(redacFreq_rel)
-
-redacTable <- cbind(redacFreq, redacFreq_rel, redacFreq_cum, redacFreq_rel_cum)
+redacTable <- make_frequency_table(enem$NU_NOTA_REDACAO, limites, intervalos, F)
 
 mathTable
 redacTable
 
-barplot(mathFreq_rel, space=F, main="Frequencias das notas de matematica", ylim=c(0, 50), xlab="Range notas", ylab="Frequencia (%)", col="lightsalmon")
-barplot(redacFreq_rel, space=F, main="Frequencias das notas de redaçao", ylim=c(0, 30), xlab="Range notas", ylab="Frequencia (%)", col="coral")
+barplot(mathTable[,2], space=F, main="Frequencias das notas de matematica", ylim=c(0, 50), xlab="Range notas", ylab="Frequencia (%)", col="lightsalmon")
+barplot(redacTable[,2], space=F, main="Frequencias das notas de redaçao", ylim=c(0, 30), xlab="Range notas", ylab="Frequencia (%)", col="coral")
 
 ##########################################################################
 # ---------------------------------------------------------------------- #
@@ -88,13 +87,64 @@ intervalos <- c("0 |-- 300", "300 |-- 400", "400 |-- 500", "500 |-- 600",
                 "600 |-- 700","700 |-- 1000")
 
 # Caluclando frequencias absolutas, relativas, e acumuladas
-enemFreq <- table(cut(enem$NU_NOTA_ENEM, breaks=limites, right=F, labels=intervalos))
-enemFreq_rel <- round(enemFreq / length(enem$NU_NOTA_ENEM) * 100, 2)
-enemFreq_cum <- cumsum(enemFreq)
-enemFreq_rel_cum <- cumsum(enemFreq_rel)
-
-enemTable <- cbind(enemFreq, enemFreq_rel, enemFreq_cum, enemFreq_rel_cum)
+enemTable <- make_frequency_table(enem$NU_NOTA_ENEM, limites, intervalos, F)
 
 enemTable
 
-barplot(enemFreq_rel, space=F, main="Frequencias das notas do ENEM", ylim=c(0, 50), xlab="Range notas", ylab="Frequencia (%)", col="indianred2")
+barplot(enemTable[,2], space=F, main="Frequencias das notas do ENEM", ylim=c(0, 50), xlab="Range notas", ylab="Frequencia (%)", col="indianred2")
+
+##########################################################################
+# ---------------------------------------------------------------------- #
+##########################################################################
+
+# Analisando relaçao entre o tipo de escola (Publica/Particular) e as notas da prova de redaçao
+limites <- seq(from=0, to=1000, by=200)
+intervalos <- c("0 |-- 200", "200 |-- 400", "400 |-- 600", "600 |-- 800", "800 |-- 1000")
+
+grade_school <- table(enem$TP_ESCOLA, cut(enem$NU_NOTA_REDACAO, breaks=limites, right=F, labels=intervalos))
+grade_school
+
+# Transoftamdo a frequencia absoluta em frequencia relativa
+grade_school[1,] <- round(grade_school[1,] / sum(grade_school[1,])*100, 2)
+grade_school[2,] <- round(grade_school[2,] / sum(grade_school[2,])*100, 2)
+
+grade_school
+barplot(grade_school, space=F, main="Frequencias das notas de redaçao por tipo de escola", 
+        ylim=c(0, 100), xlab="Range notas", ylab="Frequencia (%)", 
+        legend.text=c("Escola Publica", "Escola Particular"), col=c("indianred2", "lightsalmon"))
+
+pie(grade_school[1,], main="Prova de redaçao escola publica", labels=paste0(intervalos, " = ", grade_school[1,], " %") )
+pie(grade_school[2,], main="Prova de redaçao escola particular", labels=paste0(intervalos, " = ", grade_school[2,], " %") )
+
+##########################################################################
+# ---------------------------------------------------------------------- #
+##########################################################################
+
+# Correlaçao entre idade e nota do ENEM
+cor(x=enem$NU_IDADE, y=enem$NU_NOTA_ENEM)
+cor(x=enem$NU_IDADE, y=enem$NU_NOTA_ENEM, method="kendall")
+cor(x=enem$NU_IDADE, y=enem$NU_NOTA_ENEM, method="spearman")
+
+q_idades = quantile(enem$NU_IDADE)
+# segundo e terceiro quantil soa iguais
+q_idades[4] <- q_idades[4]+1
+idade <- cut(enem$NU_IDADE, breaks=q_idades, include.lowest=T)
+nota <- cut(enem$NU_NOTA_ENEM, breaks=quantile(enem$NU_NOTA_ENEM), include.lowest=T)
+
+idade_notas <- table(idade, nota)
+idade_notas
+# Gerando tabela de frequencias relativas
+freq_idade_notas <- idade_notas
+n <- 4
+for(i in 1:n){
+  freq_idade_notas[i,] <- round(idade_notas[i,] / sum(idade_notas[i,]) * 100, 2)
+}
+
+freq_idade_notas
+
+plot(x=enem$NU_IDADE, y=enem$NU_NOTA_ENEM, main="Relaçao entre as notas do ENEM e a idade dos partecipantes", 
+     ylab="Nota do ENEM", xlab="Idade", col="indianred2")
+
+##########################################################################
+# ---------------------------------------------------------------------- #
+##########################################################################

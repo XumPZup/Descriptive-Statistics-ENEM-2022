@@ -110,7 +110,7 @@ grade_school[2,] <- round(grade_school[2,] / sum(grade_school[2,])*100, 2)
 
 grade_school
 barplot(grade_school, space=F, main="Frequencias das notas de redaçao por tipo de escola", 
-        ylim=c(0, 100), xlab="Range notas", ylab="Frequencia (%)", 
+        ylim=c(0, 100), xlab="Range notas", 
         legend.text=c("Escola Publica", "Escola Particular"), col=c("indianred2", "lightsalmon"))
 
 pie(grade_school[1,], main="Prova de redaçao escola publica", labels=paste0(intervalos, " = ", grade_school[1,], " %") )
